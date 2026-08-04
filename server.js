@@ -16,9 +16,11 @@ const NODE_ENV = (process.env.NODE_ENV || 'production').toLowerCase();
 const TEST_MODE = (process.env.TEST_MODE || 'true').toLowerCase() === 'true';
 const INTERNAL_EMAIL = process.env.INTERNAL_EMAIL || 'rick@therankingstore.io';
 const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
+const BUILD_VERSION = '2.2.0';
+const START_TIME = Date.now();
 
 console.log('\n' + '='.repeat(55));
-console.log('  The Ranking Store API - v2.2.0');
+console.log('  The Ranking Store API - v' + BUILD_VERSION);
 console.log('='.repeat(55) + '\n');
 console.log('[Boot] Starting...');
 
@@ -30,6 +32,9 @@ const scanEngine = new ScanEngine();
 const scoringEngine = new ScoringEngine();
 const reportGenerator = new ReportGenerator();
 
+let lastScanTimestamp = null;
+let schedulerActive = false;
+
 const app = express();
 
 // Health endpoint — FIRST, before all middleware, completely self-contained
@@ -40,14 +45,41 @@ app.get('/health', (req, res) => {
       getDb().prepare('SELECT 1').get();
       dbOk = true;
     } catch { /* silent */ }
+
+    const uptime = Math.floor((Date.now() - START_TIME) / 1000);
+    const hours = Math.floor(uptime / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
+    const uptimeStr = hours + 'h ' + minutes + 'm';
+
+    // Count pending scheduled emails
+    let pendingEmails = 0;
+    try {
+      const row = getDb().prepare("SELECT COUNT(*) as count FROM leads WHERE next_email_at IS NOT NULL AND next_email_at <= datetime('now') AND sequence_status = 'active' AND status NOT IN ('purchased','replied','unsubscribed','bounced','stopped','closed')").get();
+      if (row) pendingEmails = row.count;
+    } catch { /* silent */ }
+
     res.status(200).json({
       status: 'ok',
-      version: '2.2.0',
+      version: BUILD_VERSION,
       timestamp: new Date().toISOString(),
       environment: NODE_ENV,
       testMode: TEST_MODE,
-      database: { status: dbOk ? 'connected' : 'pending', path: process.env.DATABASE_PATH || null },
+      application: {
+        uptime: uptimeStr,
+        uptimeSeconds: uptime,
+        buildVersion: BUILD_VERSION,
+        lastScanTimestamp: lastScanTimestamp,
+      },
+      database: {
+        status: dbOk ? 'connected' : 'error',
+        path: dbPath,
+        storage: dbPath.startsWith('/var/data') ? 'persistent disk' : 'ephemeral',
+      },
       mailgun: { configured: Boolean(process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) },
+      scheduler: {
+        status: schedulerActive ? 'active' : 'inactive',
+        pendingEmails: pendingEmails,
+      },
     });
   } catch (error) {
     res.status(500).json({ status: 'error', message: 'Health check failed' });
@@ -103,6 +135,7 @@ app.post('/api/scan', async (req, res) => {
       leadManager.update(lead.id, { scan_status: 'Complete', scan_date: new Date().toISOString(), scan_score: scores.overall, signals, scores, status: 'Scan Complete' });
       const reportHtml = reportGenerator.generateHtml(lead, signals, scores);
       leadManager.update(lead.id, { scan_report_html: reportHtml });
+      lastScanTimestamp = new Date().toISOString();
       scheduleFirstEmail(lead.id);
     } catch (err) {
       leadManager.update(lead.id, { scan_status: 'Failed', status: 'Needs Manual Review', errors: [err.message] });
@@ -121,5 +154,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('[Boot] Mailgun: ' + (emailService.isConfigured() ? 'configured' : 'NOT configured'));
   console.log('[Boot] Scheduler: active');
   console.log('[Boot] Ready.\n');
+  schedulerActive = true;
   startScheduler();
 });
