@@ -12,8 +12,8 @@ import { startScheduler, scheduleFirstEmail } from './services/scheduler.js';
 import * as EmailTemplates from './services/email-templates.js';
 
 const PORT = process.env.PORT || 10000;
-const NODE_ENV = process.env.NODE_ENV || 'production';
-const TEST_MODE = process.env.TEST_MODE !== 'false';
+const NODE_ENV = (process.env.NODE_ENV || 'production').toLowerCase();
+const TEST_MODE = (process.env.TEST_MODE || 'true').toLowerCase() === 'true';
 const INTERNAL_EMAIL = process.env.INTERNAL_EMAIL || 'rick@therankingstore.io';
 const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
 
@@ -44,8 +44,8 @@ app.get('/health', (req, res) => {
       status: 'ok',
       version: '2.2.0',
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      testMode: process.env.TEST_MODE === 'true',
+      environment: NODE_ENV,
+      testMode: TEST_MODE,
       database: { status: dbOk ? 'connected' : 'pending', path: process.env.DATABASE_PATH || null },
       mailgun: { configured: Boolean(process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) },
     });
