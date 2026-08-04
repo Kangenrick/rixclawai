@@ -1,11 +1,12 @@
 {
   "name": "ranking-store-api",
-  "version": "2.2.0",
+  "version": "2.1.0",
   "type": "module",
   "description": "The Ranking Store API — AI Visibility Scan Engine, Report Generator, Email Automation & Follow-Up System",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "engines": {
     "node": "20.x"
@@ -19,61 +20,3 @@
     "better-sqlite3": "^11.3.0"
   }
 }
-
----
-
-FILE 3: .env.example
-
-Path: .env.example
-
-NODE_ENV=production
-PORT=10000
-TEST_MODE=true
-MAILGUN_API_KEY=
-MAILGUN_DOMAIN=mg.therankingstore.io
-MAILGUN_FROM=Rick Fleming <rick@therankingstore.io>
-MAILGUN_REPLY_TO=rick@therankingstore.io
-CORS_ORIGIN=https://therankingstore.io
-INTERNAL_EMAIL=rick@therankingstore.io
-DATABASE_PATH=/var/data/leads.db
-REPORT_STORAGE_PATH=/var/data/reports
-PUBLIC_API_URL=https://api.therankingstore.io
-PUBLIC_SITE_URL=https://therankingstore.io
-SESSION_SECRET=
-ADMIN_SECRET=
-
----
-
-FILE 4: .gitignore
-
-Path: .gitignore
-
-node_modules/
-data/
-.env
-*.log
-.DS_Store
-
----
-
-FILE 5: .node-version
-
-Path: .node-version
-
-20
-
----
-
-FILE 6: package-lock.json (LARGE - create this one LAST)
-
-Path: package-lock.json
-
-To get this file, run this command AFTER pushing everything else:
-  npm install --package-lock-only
-
-Or reply to this email and I will send it separately.
-
----
-
-After creating all files, Render will auto-deploy. Then test:
-  curl https://ranking-store-api.onrender.com/health
