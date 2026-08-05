@@ -67,7 +67,7 @@ export function initDatabase() {
   try {
     db = new Database(dbPath);
     db.pragma('journal_mode = WAL');
-    console.log(`[DB] Initialized at: ${DB_PATH}`);
+    console.log(`[DB] Initialized at: ${dbPath}`);
   } catch (err) {
     console.error(`[DB] FATAL: Cannot open database: ${err.message}`);
     process.exit(1);
