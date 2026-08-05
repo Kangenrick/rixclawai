@@ -26,20 +26,26 @@ console.log('  The Ranking Store API - v' + BUILD_VERSION);
 console.log('='.repeat(55) + '\n');
 console.log('[Boot] Starting...');
 
-const dbPath = process.env.DATABASE_PATH || './data/leads.db';
-const reportPath = process.env.REPORT_STORAGE_PATH || './data/reports';
 initDatabase();
 
-// Ensure report storage directory exists
-// If parent is /var/data, Render creates the mount — only create the child subdirectory
+// Resolve effective paths after database init handles /var/data fallback
+const DEFAULT_DB_PATH = './data/leads.db';
+const DEFAULT_REPORT_PATH = './data/reports';
+
+let dbPath = process.env.DATABASE_PATH || DEFAULT_DB_PATH;
+let reportPath = process.env.REPORT_STORAGE_PATH || DEFAULT_REPORT_PATH;
+
+const dbDir = path.dirname(dbPath);
+if (dbDir === '/var/data' && !fs.existsSync('/var/data')) {
+  console.log('[Boot] /var/data not mounted — falling back to ./data/');
+  dbPath = DEFAULT_DB_PATH;
+  reportPath = DEFAULT_REPORT_PATH;
+}
+
+// Create report directory (safe — will only ever be ./data/ at this point)
 if (!fs.existsSync(reportPath)) {
-  const parentDir = path.dirname(reportPath);
-  if (parentDir === '/var/data' && !fs.existsSync(parentDir)) {
-    console.log('[Boot] Persistent disk /var/data not yet mounted — skipping report directory creation');
-  } else {
-    fs.mkdirSync(reportPath, { recursive: true });
-    console.log('[Boot] Report directory created: ' + reportPath);
-  }
+  fs.mkdirSync(reportPath, { recursive: true });
+  console.log('[Boot] Report directory created: ' + reportPath);
 }
 
 const leadManager = new LeadManager();
