@@ -27,21 +27,34 @@ export function initDatabase() {
   const dbDir = path.dirname(DB_PATH);
   const reportDir = REPORT_PATH;
 
-  for (const dir of [dbDir, reportDir]) {
-    if (!fs.existsSync(dir)) {
+  // Create database directory only if it's not /var/data (Render mounts it)
+  if (!fs.existsSync(dbDir)) {
+    if (dbDir === '/var/data') {
+      console.log('[DB] /var/data not yet mounted — will retry on first write');
+    } else {
       try {
-        fs.mkdirSync(dir, { recursive: true });
-        console.log(`[DB] Created directory: ${dir}`);
+        fs.mkdirSync(dbDir, { recursive: true });
+        console.log(`[DB] Created directory: ${dbDir}`);
       } catch (err) {
-        console.error(`[DB] FATAL: Cannot create ${dir}: ${err.message}`);
+        console.error(`[DB] FATAL: Cannot create ${dbDir}: ${err.message}`);
         process.exit(1);
       }
     }
-    try {
-      fs.accessSync(dir, fs.constants.W_OK);
-    } catch {
-      console.error(`[DB] FATAL: Not writable: ${dir}`);
-      process.exit(1);
+  }
+
+  // Create report directory only if parent is NOT /var/data (or if /var/data already exists)
+  if (!fs.existsSync(reportDir)) {
+    const parentDir = path.dirname(reportDir);
+    if (parentDir === '/var/data' && !fs.existsSync(parentDir)) {
+      console.log('[DB] /var/data not yet mounted — skipping report directory creation');
+    } else {
+      try {
+        fs.mkdirSync(reportDir, { recursive: true });
+        console.log(`[DB] Created report directory: ${reportDir}`);
+      } catch (err) {
+        console.error(`[DB] WARNING: Cannot create report directory ${reportDir}: ${err.message}`);
+        // Non-fatal — reports will be stored in DB only
+      }
     }
   }
 
