@@ -30,10 +30,16 @@ const dbPath = process.env.DATABASE_PATH || './data/leads.db';
 const reportPath = process.env.REPORT_STORAGE_PATH || './data/reports';
 initDatabase();
 
-// Ensure report storage directory exists (persistent disk or local)
+// Ensure report storage directory exists
+// If parent is /var/data, Render creates the mount — only create the child subdirectory
 if (!fs.existsSync(reportPath)) {
-  fs.mkdirSync(reportPath, { recursive: true });
-  console.log('[Boot] Report directory created: ' + reportPath);
+  const parentDir = path.dirname(reportPath);
+  if (parentDir === '/var/data' && !fs.existsSync(parentDir)) {
+    console.log('[Boot] Persistent disk /var/data not yet mounted — skipping report directory creation');
+  } else {
+    fs.mkdirSync(reportPath, { recursive: true });
+    console.log('[Boot] Report directory created: ' + reportPath);
+  }
 }
 
 const leadManager = new LeadManager();
