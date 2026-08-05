@@ -18,48 +18,54 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 
-const DB_PATH = process.env.DATABASE_PATH || './data/leads.db';
-const REPORT_PATH = process.env.REPORT_STORAGE_PATH || './data/reports';
+const DEFAULT_DB_PATH = './data/leads.db';
+const DEFAULT_REPORT_PATH = './data/reports';
 
 let db = null;
+let actualDbPath = DEFAULT_DB_PATH;
+let actualReportPath = DEFAULT_REPORT_PATH;
 
 export function initDatabase() {
-  const dbDir = path.dirname(DB_PATH);
-  const reportDir = REPORT_PATH;
+  let dbPath = process.env.DATABASE_PATH || DEFAULT_DB_PATH;
+  let reportPath = process.env.REPORT_STORAGE_PATH || DEFAULT_REPORT_PATH;
 
-  // Create database directory only if it's not /var/data (Render mounts it)
-  if (!fs.existsSync(dbDir)) {
-    if (dbDir === '/var/data') {
-      console.log('[DB] /var/data not yet mounted — will retry on first write');
-    } else {
-      try {
-        fs.mkdirSync(dbDir, { recursive: true });
-        console.log(`[DB] Created directory: ${dbDir}`);
-      } catch (err) {
-        console.error(`[DB] FATAL: Cannot create ${dbDir}: ${err.message}`);
-        process.exit(1);
-      }
+  const dbDir = path.dirname(dbPath);
+
+  // If /var/data doesn't exist, fall back to local ./data/ paths automatically
+  if (dbDir === '/var/data' && !fs.existsSync('/var/data')) {
+    console.log('[DB] /var/data not mounted — falling back to ./data/');
+    dbPath = DEFAULT_DB_PATH;
+    reportPath = DEFAULT_REPORT_PATH;
+  }
+
+  actualDbPath = dbPath;
+  actualReportPath = reportPath;
+
+  const finalDbDir = path.dirname(dbPath);
+
+  // Create database directory (safe — will only ever be ./data/ at this point)
+  if (!fs.existsSync(finalDbDir)) {
+    try {
+      fs.mkdirSync(finalDbDir, { recursive: true });
+      console.log(`[DB] Created directory: ${finalDbDir}`);
+    } catch (err) {
+      console.error(`[DB] FATAL: Cannot create ${finalDbDir}: ${err.message}`);
+      process.exit(1);
     }
   }
 
-  // Create report directory only if parent is NOT /var/data (or if /var/data already exists)
-  if (!fs.existsSync(reportDir)) {
-    const parentDir = path.dirname(reportDir);
-    if (parentDir === '/var/data' && !fs.existsSync(parentDir)) {
-      console.log('[DB] /var/data not yet mounted — skipping report directory creation');
-    } else {
-      try {
-        fs.mkdirSync(reportDir, { recursive: true });
-        console.log(`[DB] Created report directory: ${reportDir}`);
-      } catch (err) {
-        console.error(`[DB] WARNING: Cannot create report directory ${reportDir}: ${err.message}`);
-        // Non-fatal — reports will be stored in DB only
-      }
+  // Create report directory if needed
+  if (!fs.existsSync(reportPath)) {
+    try {
+      fs.mkdirSync(reportPath, { recursive: true });
+      console.log(`[DB] Created report directory: ${reportPath}`);
+    } catch (err) {
+      console.error(`[DB] WARNING: Cannot create report directory ${reportPath}: ${err.message}`);
     }
   }
 
   try {
-    db = new Database(DB_PATH);
+    db = new Database(dbPath);
     db.pragma('journal_mode = WAL');
     console.log(`[DB] Initialized at: ${DB_PATH}`);
   } catch (err) {
@@ -160,5 +166,5 @@ export function getDb() {
 }
 
 export function getReportStoragePath() {
-  return REPORT_PATH;
+  return actualReportPath;
 }
