@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import fs from 'fs';
+import path from 'path';
 import { initDatabase, getDb } from './services/database.js';
 import { LeadManager } from './services/lead-manager.js';
 import { ScanEngine } from './services/scanner.js';
@@ -25,7 +27,14 @@ console.log('='.repeat(55) + '\n');
 console.log('[Boot] Starting...');
 
 const dbPath = process.env.DATABASE_PATH || './data/leads.db';
+const reportPath = process.env.REPORT_STORAGE_PATH || './data/reports';
 initDatabase();
+
+// Ensure report storage directory exists (persistent disk or local)
+if (!fs.existsSync(reportPath)) {
+  fs.mkdirSync(reportPath, { recursive: true });
+  console.log('[Boot] Report directory created: ' + reportPath);
+}
 
 const leadManager = new LeadManager();
 const scanEngine = new ScanEngine();
@@ -135,6 +144,15 @@ app.post('/api/scan', async (req, res) => {
       leadManager.update(lead.id, { scan_status: 'Complete', scan_date: new Date().toISOString(), scan_score: scores.overall, signals, scores, status: 'Scan Complete' });
       const reportHtml = reportGenerator.generateHtml(lead, signals, scores);
       leadManager.update(lead.id, { scan_report_html: reportHtml });
+      // Save report to disk — survives restarts and redeploys
+      try {
+        const reportFile = path.join(reportPath, lead.id + '.html');
+        fs.writeFileSync(reportFile, reportHtml, 'utf8');
+        leadManager.update(lead.id, { scan_report_file: reportFile });
+        console.log('[Scan] Report saved to disk: ' + reportFile);
+      } catch (diskErr) {
+        console.log('[Scan] Failed to save report to disk: ' + diskErr.message);
+      }
       lastScanTimestamp = new Date().toISOString();
       scheduleFirstEmail(lead.id);
     } catch (err) {
@@ -145,7 +163,24 @@ app.post('/api/scan', async (req, res) => {
 
 app.get('/api/leads', (req, res) => { res.json(leadManager.list(req.query.status)); });
 app.get('/api/leads/:id', (req, res) => { const l = leadManager.get(req.params.id); if (!l) return res.status(404).json({ error: 'Not found' }); res.json(l); });
-app.get('/api/leads/:id/report', (req, res) => { const l = leadManager.get(req.params.id); if (!l) return res.status(404).json({ error: 'Not found' }); if (!l.scan_report_html) return res.status(400).json({ error: 'Not ready' }); res.set('Content-Type', 'text/html'); res.send(l.scan_report_html); });
+app.get('/api/leads/:id/report', (req, res) => {
+  // Try disk file first — survives restarts and redeploys
+  const diskFile = path.join(reportPath, req.params.id + '.html');
+  if (fs.existsSync(diskFile)) {
+    res.set('Content-Type', 'text/html');
+    return res.send(fs.readFileSync(diskFile, 'utf8'));
+  }
+  // Fallback to DB in-memory
+  const l = leadManager.get(req.params.id);
+  if (!l) return res.status(404).json({ error: 'Not found' });
+  if (l.scan_report_html) {
+    // Save to disk for next time
+    try { fs.writeFileSync(diskFile, l.scan_report_html, 'utf8'); } catch {}
+    res.set('Content-Type', 'text/html');
+    return res.send(l.scan_report_html);
+  }
+  res.status(404).json({ error: 'Report not ready' });
+});
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log('[Boot] Server listening on 0.0.0.0:' + PORT);
