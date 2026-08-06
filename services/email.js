@@ -17,6 +17,7 @@ export class EmailService {
     this.replyTo = process.env.MAILGUN_REPLY_TO || 'rick@therankingstore.io';
     this.testMode = process.env.TEST_MODE !== 'false';
     this.testEmail = 'rick@therankingstore.io';
+    this.internalEmail = 'rick@therankingstore.io';
     this.baseUrl = `https://api.mailgun.net/v3/${this.domain}/messages`;
     this.configured = !!this.apiKey;
   }
@@ -38,17 +39,20 @@ export class EmailService {
       return { skipped: true, reason: 'Mailgun not configured' };
     }
 
-    return this._sendDirect(recipient, prefix + subject, html, text);
+    // Always BCC rick@therankingstore.io on real sends so Rick sees every scan
+    const bcc = this.testMode ? undefined : this.internalEmail;
+    return this._sendDirect(recipient, prefix + subject, html, text, bcc);
   }
 
   /**
    * Send via direct Mailgun REST API.
    * Handles non-JSON responses safely.
    */
-  async _sendDirect(to, subject, html, text) {
+  async _sendDirect(to, subject, html, text, bcc) {
     const formData = new URLSearchParams();
     formData.append('from', this.from);
     formData.append('to', to);
+    if (bcc) formData.append('bcc', bcc);
     formData.append('subject', subject);
     formData.append('h:Reply-To', this.replyTo);
     if (html) formData.append('html', html);
