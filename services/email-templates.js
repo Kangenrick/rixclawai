@@ -45,37 +45,41 @@ export function scanEmail(lead, score, strengths, problems, actions) {
   return {
     subject: `Your AI Visibility Scan for ${lead.business}`,
     html: wrapBody(`
-      <p style="font-size:1.05rem;margin:0 0 16px">Hi ${lead.name},</p>
-      <p>Your complimentary AI Visibility Scan for <strong>${lead.business}</strong> has been completed.</p>
+      <p style="font-size:1.05rem;margin:0 0 16px;color:#e2e8f0">Hi ${lead.name},</p>
+      <p style="color:#94a3b8;font-size:.95rem;line-height:1.7">Your complimentary AI Visibility Scan for <strong style="color:#e2e8f0">${lead.business}</strong> has been completed.</p>
       ${scoreBox(score)}
-      <p style="font-size:.88rem;color:#5f6b82">Your score of <strong style="color:${color}">${score}/100</strong> reflects how clearly your business is understood by search engines and AI-powered discovery platforms including Google Search, AI Overviews, ChatGPT, and Gemini.</p>
+      <p style="font-size:.88rem;color:#94a3b8;line-height:1.6">Your score of <strong style="color:${color}">${score}/100</strong> reflects how clearly your business is understood by Google Search, AI Overviews, ChatGPT, and Gemini.</p>
 
-      <h3 style="font-size:.95rem;margin:20px 0 8px">What was scanned</h3>
-      <ul style="font-size:.85rem;color:#47536a;padding-left:18px">
+      <h3 style="font-size:.95rem;margin:20px 0 8px;color:#e2e8f0">What was scanned</h3>
+      <ul style="font-size:.85rem;color:#94a3b8;padding-left:18px;line-height:1.7">
         <li>Website technical structure and accessibility</li>
-        <li>Schema markup and structured data</li>
         <li>Content depth and topical authority</li>
-        <li>Local search signals and Google Business Profile</li>
+        <li>Local search signals</li>
         <li>Review and trust signals</li>
-        <li>AI readiness and machine-readable context</li>
+        <li>AI readiness</li>
       </ul>
 
-      ${strengths.length ? `<h3 style="font-size:.95rem;margin:20px 0 8px">What we found working well</h3><ul style="font-size:.85rem;color:#47536a;padding-left:18px">${strengths.map(s => `<li>${s}</li>`).join('')}</ul>` : ''}
+      ${strengths.length ? `<h3 style="font-size:.95rem;margin:20px 0 8px;color:#e2e8f0">What we found working well</h3><ul style="font-size:.85rem;color:#94a3b8;padding-left:18px;line-height:1.7">${strengths.map(s => `<li>${s}</li>`).join('')}</ul>` : ''}
 
-      ${problems.length ? `<h3 style="font-size:.95rem;margin:20px 0 8px">Areas that may need attention</h3><ul style="font-size:.85rem;color:#47536a;padding-left:18px">${problems.map(p => `<li>${p}</li>`).join('')}</ul>` : ''}
+      ${problems.length ? `<h3 style="font-size:.95rem;margin:20px 0 8px;color:#e2e8f0">Areas that may need attention</h3><ul style="font-size:.85rem;color:#94a3b8;padding-left:18px;line-height:1.7">${problems.map(p => `<li>${p}</li>`).join('')}</ul>` : ''}
 
-      <div style="background:#fef9e7;border-left:4px solid #f0c040;padding:16px;border-radius:8px;margin:24px 0">
-        <p style="margin:0;color:#5a4a1a;font-size:.88rem">
-          <strong>What happens next.</strong> We are preparing a personalized implementation proposal based on your scan results. It will include specific recommendations matched to the findings above.
+      <div style="background:rgba(240,192,64,.08);border:1px solid rgba(240,192,64,.15);border-radius:12px;padding:16px;margin:24px 0">
+        <p style="margin:0;color:#f0c040;font-size:.88rem">
+          <strong>What happens next.</strong> We are preparing a personalized implementation proposal based on your scan results.
         </p>
-        <p style="margin:8px 0 0;color:#5a4a1a;font-size:.88rem">
+        <p style="margin:8px 0 0;color:#f0c040;font-size:.88rem">
           You will receive it within approximately 24 hours.
         </p>
       </div>
 
-      <p style="font-size:.88rem;color:#5f6b82">If you have any questions in the meantime, reply to this email. Rick reviews every scan personally.</p>
+      <p style="font-size:.88rem;color:#64748b">If you have any questions, reply to this email. Rick reviews every scan personally.</p>
 
-      <p style="color:#5f6b82;font-size:.85rem;margin-top:24px">Best,<br>Rick Fleming<br>The Ranking Store</p>
+      <div style="border-top:1px solid rgba(255,255,255,.06);margin-top:24px;padding-top:16px">
+        <p style="color:#64748b;font-size:.85rem;margin:2px 0">Best,</p>
+        <p style="color:#e2e8f0;font-size:.85rem;margin:2px 0"><strong>Rick Fleming</strong></p>
+        <p style="color:#818cf8;font-size:.82rem;margin:2px 0">The Ranking Store</p>
+        <p style="margin:2px 0;font-size:.82rem"><a href="mailto:rick@therankingstore.io" style="color:#818cf8;text-decoration:none">rick@therankingstore.io</a></p>
+      </div>
     `),
     text: `Hi ${lead.name},\n\nYour AI Visibility Scan for ${lead.business} has been completed.\n\nOverall Score: ${score}/100\n\nWhat was scanned: Website structure, schema, content, local search, reviews, and AI readiness.\n\nWe are preparing a personalized implementation proposal based on your results. You will receive it within approximately 24 hours.\n\nBest,\nRick Fleming\nThe Ranking Store`,
   };
@@ -122,15 +126,20 @@ export function followUpEmail(lead, step, subject, intro, body, buyUrl, callUrl)
   return {
     subject: subject || `Follow-up on your AI Visibility Scan`,
     html: wrapBody(`
-      <p style="font-size:1.05rem;margin:0 0 16px">Hi ${lead.name},</p>
-      ${intro || `<p>I wanted to follow up on your AI Visibility Scan for <strong>${lead.business}</strong>.</p>`}
+      <p style="font-size:1.05rem;margin:0 0 16px;color:#e2e8f0">Hi ${lead.name},</p>
+      ${intro || `<p style="color:#94a3b8;font-size:.95rem">I wanted to follow up on your AI Visibility Scan for <strong style="color:#e2e8f0">${lead.business}</strong>.</p>`}
       ${body || ''}
-      <div style="text-align:center;margin:24px 0">
+      <div style="background:rgba(129,140,248,.06);border:1px solid rgba(129,140,248,.12);border-radius:12px;padding:20px;text-align:center;margin:20px 0">
+        <p style="color:#94a3b8;font-size:.85rem;margin:0 0 16px;line-height:1.6">Ready to move forward? Your proposal and custom plan are ready to go.</p>
         ${buyBtn('Get Started \u2192', buyUrl || PAYMENT_LINK, lead.id)}
-        ${buyBtn('Book a 15-Min Call', 'https://calendly.com/rick-therankingstore', lead.id)}
       </div>
-      ${step === 8 ? '<p style="color:#5f6b82;font-style:italic">This is the final message in this sequence. You can reply anytime if you would like to revisit this.</p>' : ''}
-      <p style="color:#5f6b82;font-size:.85rem;margin-top:24px">Best,<br>Rick Fleming<br>The Ranking Store</p>
+      ${step === 8 ? '<p style="color:#64748b;font-style:italic;font-size:.85rem">This is the final message in this sequence. You can reply anytime if you would like to revisit this.</p>' : ''}
+      <div style="border-top:1px solid rgba(255,255,255,.06);margin-top:24px;padding-top:16px">
+        <p style="color:#64748b;font-size:.85rem;margin:2px 0">Best,</p>
+        <p style="color:#e2e8f0;font-size:.85rem;margin:2px 0"><strong>Rick Fleming</strong></p>
+        <p style="color:#818cf8;font-size:.82rem;margin:2px 0">The Ranking Store</p>
+        <p style="margin:2px 0;font-size:.82rem"><a href="mailto:rick@therankingstore.io" style="color:#818cf8;text-decoration:none">rick@therankingstore.io</a></p>
+      </div>
     `),
     text: `Hi ${lead.name},\n\n${intro || ''}\n\nBest,\nRick Fleming\nThe Ranking Store`,
   };
