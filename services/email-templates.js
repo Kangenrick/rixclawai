@@ -1,3 +1,7 @@
+const PAYMENT_LINK = 'https://app.paykickstart.com/checkout/QVdwavLoEXPAbzXgMgQj60OR7m9GeKD8';
+const PLAN_NAME = 'All-In Plan';
+const PLAN_PRICE = '$997/mo';
+
 /**
  * Email Templates — Professional, high-trust email sequence
  * The Ranking Store API
@@ -21,7 +25,7 @@ ${body}
 }
 
 function buyBtn(text, url, leadId) {
-  const href = url && leadId ? `${url}?lid=${leadId}&src=trs` : url || '[BUY BUTTON URL]';
+  const href = url && leadId ? `${url}?lid=${leadId}&src=trs` : url || PAYMENT_LINK;
   return `<a href="${href}" style="display:inline-block;background:linear-gradient(135deg,#2f6bff,#6a4cff);color:#fff;padding:14px 32px;border-radius:999px;text-decoration:none;font-weight:800;font-size:1rem;margin:8px 4px">${text}</a>`;
 }
 
@@ -100,9 +104,9 @@ export function proposalEmail(lead, recap, services, price, buyUrl, callUrl) {
       <p><strong>Recommended approach:</strong></p>
       ${servicesHtml}
       <div style="text-align:center;padding:24px;margin:24px 0">
-        <p style="font-size:1.5rem;font-weight:900;color:#0b1020;margin:0">${price}</p>
-        ${buyBtn('Get Started', buyUrl, lead.id)}
-        ${callUrl ? buyBtn('Book a Call', callUrl, lead.id) : ''}
+        <p style="font-size:1.5rem;font-weight:900;color:#0b1020;margin:0">${price || PLAN_PRICE}</p>
+        ${buyBtn('Get Started \u2192', buyUrl || PAYMENT_LINK, lead.id)}
+        ${buyBtn('Book a 15-Min Call', 'https://calendly.com/rick-therankingstore', lead.id)}
       </div>
       <p>I am available to answer any questions. Reply to this email or book a call above.</p>
       <p style="color:#5f6b82;font-size:.85rem;margin-top:24px">Best,<br>Rick Fleming<br>The Ranking Store</p>
@@ -122,8 +126,8 @@ export function followUpEmail(lead, step, subject, intro, body, buyUrl, callUrl)
       ${intro || `<p>I wanted to follow up on your AI Visibility Scan for <strong>${lead.business}</strong>.</p>`}
       ${body || ''}
       <div style="text-align:center;margin:24px 0">
-        ${buyBtn('Get Started', buyUrl, lead.id)}
-        ${callUrl ? buyBtn('Book a Call', callUrl, lead.id) : ''}
+        ${buyBtn('Get Started \u2192', buyUrl || PAYMENT_LINK, lead.id)}
+        ${buyBtn('Book a 15-Min Call', 'https://calendly.com/rick-therankingstore', lead.id)}
       </div>
       ${step === 8 ? '<p style="color:#5f6b82;font-style:italic">This is the final message in this sequence. You can reply anytime if you would like to revisit this.</p>' : ''}
       <p style="color:#5f6b82;font-size:.85rem;margin-top:24px">Best,<br>Rick Fleming<br>The Ranking Store</p>
