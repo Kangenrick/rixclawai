@@ -110,7 +110,7 @@ export function proposalEmail(lead, recap, services, price, buyUrl, callUrl) {
       <div style="text-align:center;padding:24px;margin:24px 0">
         <p style="font-size:1.5rem;font-weight:900;color:#0b1020;margin:0">${price || PLAN_PRICE}</p>
         ${buyBtn('Get Started \u2192', buyUrl || PAYMENT_LINK, lead.id)}
-        ${buyBtn('Book a 15-Min Call', 'https://calendly.com/rick-therankingstore/30min', lead.id)}
+        ${buyBtn('Book a 30-Min Call', 'https://calendly.com/rick-therankingstore/30min', lead.id)}
       </div>
       <p>I am available to answer any questions. Reply to this email or book a call above.</p>
       <p style="color:#5f6b82;font-size:.85rem;margin-top:24px">Best,<br>Rick Fleming<br>The Ranking Store</p>
