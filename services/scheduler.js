@@ -121,7 +121,7 @@ async function processDueEmail(lead, db) {
   let lastError = null;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const result = await emailService.send(email);
+      const result = await emailService.send({ ...email, to: lead.email });
       // Log success
       db.prepare(`
         INSERT INTO email_log (lead_id, email_type, step, subject, status, attempt, idempotency_key)
